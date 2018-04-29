@@ -1,10 +1,10 @@
 class Node:
 
-    def __init__(self, feature_name, feature_split_value=None):
+    def __init__(self, feature_name=None, split_value=None, leaf_node_value=None):
         self.feature_name = feature_name
-        self.feature_split_value = feature_split_value
+        self.split_value = split_value
         self.child = []
-        self.leaf_node_value = None
+        self.leaf_node_value = leaf_node_value
 
     def add_child(self, node):
         self.child.append(node)
@@ -12,6 +12,24 @@ class Node:
 
 class Tree:
 
-    def __init__(self, start_node: Node):
-        self.start_node = start_node
+    def __init__(self, root: Node):
+        self.root = root
 
+
+if __name__ == "__main__":
+    node = Node('age')
+    tree = Tree(node)
+    child1 = Node('name0','l10')
+    child2 = Node('name1','10')
+    child3 = Node('name2','g10')
+
+    tree.root.add_child(child1)
+    tree.root.add_child(child2)
+    tree.root.add_child(child3)
+
+
+
+    for c in tree.root.child:
+        row
+
+        print(c.split_value)

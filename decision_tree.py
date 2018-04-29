@@ -49,24 +49,37 @@ class DecisionTree:
 
 
             if method == 'feature_name':
-                child = Node(content, key)
+                child = Node(feature_name=content, split_value=key)
                 node.add_child(child)
                 self.partition(training_df[content].unique(), content, data_frame, child)
 
             elif method == 'target':
-                node.split_value = key
-                node.leaf_node_value = content
+                child = Node(split_value=key, leaf_node_value=content)
+                node.add_child(child)
 
 
     def create_tree(self):
         method, content = self.calc_gini_index(self.training_df)
         root = Node(content)
         self.partition(self.training_df[content].unique(), content, self.training_df, root)
-
-        for c in root.child:
-            print(c.feature_name)
-            for m in c.child:
-                print('child:'+m.feature_name)
+        print('par:'+root.feature_name)
+        # for c in root.child:
+        #     if c.feature_name:
+        #         print('child1:'+c.feature_name)
+        #         print('splitval:'+c.split_value)
+        #
+        #     else:
+        #         print('leaf1:'+c.leaf_node_value)
+        #         print('splitval:'+c.split_value)
+        #
+        #     for m in c.child:
+        #         if m.feature_name:
+        #             print('child2:'+m.feature_name)
+        #             print('splitval:' + m.split_value)
+        #
+        #         else:
+        #             print('leaf2:' + m.leaf_node_value)
+        #             print('splitval:'+m.split_value)
 
 df = pd.read_csv("play.csv")
 
