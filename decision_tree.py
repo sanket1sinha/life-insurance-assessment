@@ -34,25 +34,22 @@ class DecisionTree:
         else:
             return training_df[training_df.columns[-1]].iloc[0], "end"
 
-    def partition(self, attributes, best_split, training_df):
+    def partition(self, unique_column_values, split_node, training_df):
 
         dict_splits ={}
-        # Change implementation , get the row directly through pandas
-        for index, row in training_df.iterrows():
-            for j in attributes:
-                if np.any(row.values == j) and j not in dict_splits:
-                    df = training_df[training_df[best_split] == j]
-                    df = df.drop(best_split, 1)
-                    dict_splits[j]= df
-        parent_node = best_split
-        for key, value in dict_splits.items():
-            best_split = self.gini_index(value, self.gini_index_label)
+        for j in unique_column_values:
+            filtered_df = training_df[training_df.values == j]
+            filtered_df.drop(split_node, 1)
+            dict_splits[j] = filtered_df
+        parent_node = split_node
+        for key, data_frame in dict_splits.items():
+            split_node = self.gini_index(data_frame, self.gini_index_label)
             print("parent node:" + parent_node)
             print("property:" + key)
-            print("child node:" + best_split[0])
+            print("child node:" + split_node[0])
             print("\n")
-            if best_split[1] != 0 and best_split[1] != "end":
-                self.partition(training_df[best_split[0]].unique(), best_split[0], value)
+            if split_node[1] != "end":
+                self.partition(training_df[split_node[0]].unique(), split_node[0], data_frame)
         return dict_splits
 
 
