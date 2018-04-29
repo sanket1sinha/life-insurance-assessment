@@ -6,7 +6,6 @@ from collections import defaultdict
 def gini_index(training_df,gini_index_label):
     gini_dic ={}
     col_names = training_df.columns
-
     if len(set(training_df[training_df.columns[-1]])) > 1:
         for x in training_df.columns:
             if x != col_names[-1]:
@@ -30,9 +29,13 @@ def partition(attributes,best_split,training_df):
                 df = training_df[training_df[best_split] == j]
                 df = df.drop(best_split, 1)
                 dict_splits[j].append(df)
+    parent_node = best_split
     for key, value in dict_splits.items():
         best_split = gini_index(value[0], gini_index_label)
-        print((best_split[0], key))
+        print("parent node:" + parent_node)
+        print("property:"+key)
+        print("child node:"+best_split[0])
+        print("\n")
         if best_split[1] !=0 and best_split[1] != "end":
             partition(training_df[best_split[0]].unique(), best_split[0], value[0])
     return dict_splits
