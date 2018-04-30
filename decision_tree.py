@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import operator
 from tree import Node
+from sklearn.preprocessing import Imputer
 
 
 class DecisionTree:
@@ -16,11 +17,14 @@ class DecisionTree:
                                              (self.no_of_sample - 1), 2).sum()
 
     def calc_gini_index(self, training_df):
+        print('calc gini')
 
         gini_dic = {}
         col_names = training_df.columns
-
-        if len(set(training_df[training_df.columns[-1]])) > 1:
+        p = len(set(training_df[training_df.columns[-1]]))
+        print(training_df)
+        print(p)
+        if p > 1:
 
             for x in training_df.columns:
                 if x != col_names[-1]:
@@ -33,20 +37,19 @@ class DecisionTree:
             if len(gini_dic) is not 0:
                 return 'feature_name', max(gini_dic.items(), key=operator.itemgetter(1))[0]
 
-        else:
+        elif p == 1:
             return 'target', training_df[training_df.columns[-1]].iloc[0]
 
+        else:
+            return
+
     def partition(self, unique_column_values, split_node, training_df, node):
-        dict_splits = {}
-        for j in unique_column_values:
-            filtered_df = training_df[training_df.values == j]
-            filtered_df.drop(split_node, 1)
-            dict_splits[j] = filtered_df
+        print('enter predict')
 
-        parent_node = split_node
-        for key, data_frame in dict_splits.items():
+        splits = list(map(lambda x: (x, training_df[training_df.values == x].drop(split_node, 1)), unique_column_values))
+
+        for key, data_frame in splits:
             method, content = self.calc_gini_index(data_frame)
-
 
             if method == 'feature_name':
                 child = Node(feature_name=content, split_value=key)
@@ -93,11 +96,22 @@ class DecisionTree:
                         break
             print(str(index) + n.leaf_node_value)
 
-df = pd.read_csv("play.csv")
-test = pd.read_csv("play_testing.csv")
-decision_tree = DecisionTree(df)
+insurance_features = pd.read_csv("training.csv")
+insurance_features_text_cols = insurance_features.select_dtypes(include=['object'])
+
+for col in insurance_features_text_cols:
+    categorical_col = pd.Categorical(insurance_features[col])
+    insurance_features[col] = categorical_col.codes
+
+# Using imputer as a preprocessing class to replace null values with mean
+preprocessor = Imputer()
+insurance_features_cleaned = preprocessor.fit_transform(insurance_features)
+insurance_features = insurance_features.drop('Id',1)
+# test = pd.read_csv("play_testing.csv")
+print('done_reading')
+decision_tree = DecisionTree(insurance_features)
 decision_tree.create_tree()
-decision_tree.predict(test)
+#decision_tree.predict(test)
 
 
 
