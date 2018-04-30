@@ -44,11 +44,15 @@ class DecisionTree:
             return
 
     def partition(self, unique_column_values, split_node, training_df, node):
-        print('enter predict')
+        print('enter predict:'+str(split_node))
+        dict_splits = {}
+        # splits = list(map(lambda x: (x, training_df[training_df.values == x].drop(split_node, 1)), unique_column_values))
+        for j in unique_column_values:
+            df = training_df[training_df[split_node].values == j]
+            df.drop(split_node, 1)
+            dict_splits[j] = df
 
-        splits = list(map(lambda x: (x, training_df[training_df.values == x].drop(split_node, 1)), unique_column_values))
-
-        for key, data_frame in splits:
+        for key, data_frame in dict_splits.items():
             method, content = self.calc_gini_index(data_frame)
 
             if method == 'feature_name':
@@ -104,12 +108,13 @@ for col in insurance_features_text_cols:
     insurance_features[col] = categorical_col.codes
 
 # Using imputer as a preprocessing class to replace null values with mean
-preprocessor = Imputer()
-insurance_features_cleaned = preprocessor.fit_transform(insurance_features)
-insurance_features = insurance_features.drop('Id',1)
+insurance_features_cleaned = insurance_features[insurance_features.columns].fillna(insurance_features[insurance_features.columns].mean())
+insurance_features_cleaned = insurance_features_cleaned.drop('Id',1)
+
+# print(insurance_features_cleaned['BMI'].unique())
 # test = pd.read_csv("play_testing.csv")
 print('done_reading')
-decision_tree = DecisionTree(insurance_features)
+decision_tree = DecisionTree(insurance_features_cleaned)
 decision_tree.create_tree()
 #decision_tree.predict(test)
 
