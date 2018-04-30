@@ -10,25 +10,23 @@ class DecisionTree:
     def __init__(self, training_df):
 
         self.training_df = training_df
+        self.response_column =  self.training_df.columns[-1]
         self.no_of_sample = self.training_df.shape[0]
 
         self.gini_index_label = 1 - np.power(self.training_df[
-                            self.training_df.columns[-1]].value_counts() /
+                                        self.response_colum].value_counts() /
                                              (self.no_of_sample - 1), 2).sum()
 
     def calc_gini_index(self, training_df):
-        print('calc gini')
-
         gini_dic = {}
-        col_names = training_df.columns
-        p = len(set(training_df[training_df.columns[-1]]))
-        print(training_df)
-        print(p)
+        p = len(set(training_df[self.response_column]))
+        # print('calc_gini:'+str(p))
+
         if p > 1:
 
             for x in training_df.columns:
-                if x != col_names[-1]:
-                    c = training_df.groupby([x, col_names[-1]]).size()
+                if x != self.response_column:
+                    c = training_df.groupby([x, self.response_column]).size()
                     t = training_df.groupby([x]).size()
                     w = t / self.no_of_sample
                     gini_index_attr = (w * (1 - (np.power(c / t, 2).groupby([x]).sum()))).sum()
@@ -38,55 +36,54 @@ class DecisionTree:
                 return 'feature_name', max(gini_dic.items(), key=operator.itemgetter(1))[0]
 
         elif p == 1:
-            return 'target', training_df[training_df.columns[-1]].iloc[0]
+            return 'target', training_df[self.response_column].iloc[0]
 
         else:
             return
 
-    def partition(self, unique_column_values, split_node, training_df, node):
-        print('enter predict:'+str(split_node))
+    def partition(self, training_df, split_node, node):
+        print('partition:'+split_node)
         dict_splits = {}
         # splits = list(map(lambda x: (x, training_df[training_df.values == x].drop(split_node, 1)), unique_column_values))
-        for j in unique_column_values:
-            df = training_df[training_df[split_node].values == j]
-            df.drop(split_node, 1)
-            dict_splits[j] = df
+        for col_value in training_df[split_node].unique():
+            df = training_df[training_df[split_node].values == col_value]
+            df = df.drop(split_node, 1)
 
-        for key, data_frame in dict_splits.items():
-            method, content = self.calc_gini_index(data_frame)
+            method, content = self.calc_gini_index(df)
 
             if method == 'feature_name':
-                child = Node(feature_name=content, split_value=key)
+                child = Node(feature_name=content, split_value=col_value)
                 node.add_child(child)
-                self.partition(training_df[content].unique(), content, data_frame, child)
+                self.partition(df, content, child)
 
             elif method == 'target':
-                child = Node(split_value=key, leaf_node_value=content)
+                child = Node(split_value=col_value, leaf_node_value=content)
                 node.add_child(child)
+        return
 
 
     def create_tree(self):
         method, content = self.calc_gini_index(self.training_df)
         self.root = Node(content)
-        self.partition(self.training_df[content].unique(), content, self.training_df, self.root)
+        self.partition(self.training_df, content, self.root)
         # print('par:' + self.root.feature_name)
-        # for c in root.child:
+        # for c in self.root.child:
         #     if c.feature_name:
-        #         print('child1:'+c.feature_name)
-        #         print('splitval:'+c.split_value)
+        #         print('child1:'+str(c.feature_name))
+        #         print('splitval:'+str(c.split_value))
         #
         #     else:
-        #         print('leaf1:'+c.leaf_node_value
-        #         print('splitval:'+c.split_value)
+        #         print('leaf1:'+str(c.leaf_node_value))
+        #         print('splitval:'+str(c.split_value))
         #
         #     for m in c.child:
         #         if m.feature_name:
-        #             print('child2:'+m.feature_name)
-        #             print('splitval:' + m.split_value)
+        #             print('child2:'+str(m.feature_name))
+        #             print('splitval:' + str(m.split_value))
         #
         #         else:
-        #             print('leaf2:' + m.leaf_node_value)
-        #             print('splitval:'+m.split_value)
+        #             print('leaf2:' + str(m.leaf_node_value))
+        #             print('splitval:'+str(m.split_value))
 
     def predict(self, testing_df):
 
@@ -111,11 +108,10 @@ for col in insurance_features_text_cols:
 insurance_features_cleaned = insurance_features[insurance_features.columns].fillna(insurance_features[insurance_features.columns].mean())
 insurance_features_cleaned = insurance_features_cleaned.drop('Id',1)
 
-# print(insurance_features_cleaned['BMI'].unique())
-# test = pd.read_csv("play_testing.csv")
 print('done_reading')
 decision_tree = DecisionTree(insurance_features_cleaned)
 decision_tree.create_tree()
+# test = pd.read_csv("play_testing.csv"
 #decision_tree.predict(test)
 
 
