@@ -22,7 +22,7 @@ class DecisionTree:
         p = len(training_df[self.response_column].unique())
         # print('calc_gini:'+str(p))
 
-        if p > 1 and training_df.shape[0] >= 50:
+        if p > 1 and training_df.shape[0] >= 100:
 
             for x in training_df.columns:
                 if x != self.response_column:
@@ -40,7 +40,7 @@ class DecisionTree:
         return 'target', training_df[self.response_column].max()
 
     def partition(self, training_data, split_node, node):
-        dict_splits = {}
+
         # splits = list(map(lambda x: (x, training_df[training_df.values == x].drop(split_node, 1)), unique_column_values))
         for col_value in training_data[split_node].unique():
             df = training_data[training_data[split_node] == col_value]
@@ -58,9 +58,12 @@ class DecisionTree:
                 node.add_child(child)
 
     def create_tree(self):
+        print('Creating Tree')
+
         method, content = self.calc_gini_index(self.training_df)
         self.root = Node(content)
         self.partition(self.training_df, content, self.root)
+
         # for c in self.root.child:
         #     if c.feature_name:
         #         print('child1:'+str(c.feature_name))
@@ -80,6 +83,11 @@ class DecisionTree:
         #             print('splitval:'+str(m.split_value))
 
     def predict(self, testing_df):
+        print('Predicting Values...')
+
+        counter = 0
+        testing_result_df = pd.DataFrame(columns=[self.response_column])
+        testing_result_df.index.name = 'Id'
 
         for index, row in testing_df.iterrows():
             n = self.root
@@ -94,12 +102,15 @@ class DecisionTree:
                     random = True
                     break
             if random:
-                print(str(20000+index) + ',' + str(self.training_df[self.response_column].max()))
+                testing_result_df.loc[index] = [self.training_df[self.response_column].max()]
+                counter+=1
             else:
-                print(str(20000+index) +','+ str(n.leaf_node_value))
+                testing_result_df.loc[index] = [n.leaf_node_value]
+        print(counter)
+        return testing_result_df
 
 
-
+print('Reading and CLeaning Data')
 
 insurance_training = pd.read_csv("training.csv")
 insurance_training_features = insurance_training.iloc[:, :-1]
@@ -154,13 +165,12 @@ for i in numerical_col:
 
 insurance_training_features_cleaned = insurance_features[:20000]
 insurance_testing_features_cleaned = insurance_features[20000:]
-insurance_training_features_cleaned[insurance_training_result.name] = insurance_training_result
-# print(insurance_features['Medical_Keyword_46'].unique())
-print('done_reading')
-# print(insurance_features[insurance_features.duplicated(insurance_features.columns[:-1])])
+insurance_training_features_cleaned = pd.concat([insurance_training_features_cleaned, insurance_training_result], axis=1)
+
 decision_tree = DecisionTree(insurance_training_features_cleaned)
 decision_tree.create_tree()
-decision_tree.predict(insurance_testing_features_cleaned)
-#
-#
-#
+insurance_testing_result = decision_tree.predict(insurance_testing_features_cleaned)
+insurance_testing_result_df = pd.DataFrame(insurance_testing_result[insurance_training_result.name].tolist(), index=list(range(20000,30000)), columns=[insurance_training_result.name])
+insurance_testing_result_df.index.name = 'Id'
+insurance_testing_result_df.to_csv('Response.csv')
+
