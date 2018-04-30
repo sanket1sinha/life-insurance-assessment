@@ -60,16 +60,16 @@ class DecisionTree:
 
     def create_tree(self):
         method, content = self.calc_gini_index(self.training_df)
-        root = Node(content)
-        self.partition(self.training_df[content].unique(), content, self.training_df, root)
-        print('par:'+root.feature_name)
+        self.root = Node(content)
+        self.partition(self.training_df[content].unique(), content, self.training_df, self.root)
+        # print('par:' + self.root.feature_name)
         # for c in root.child:
         #     if c.feature_name:
         #         print('child1:'+c.feature_name)
         #         print('splitval:'+c.split_value)
         #
         #     else:
-        #         print('leaf1:'+c.leaf_node_value)
+        #         print('leaf1:'+c.leaf_node_value
         #         print('splitval:'+c.split_value)
         #
         #     for m in c.child:
@@ -81,10 +81,23 @@ class DecisionTree:
         #             print('leaf2:' + m.leaf_node_value)
         #             print('splitval:'+m.split_value)
 
-df = pd.read_csv("play.csv")
+    def predict(self, testing_df):
 
+        for index, row  in testing_df.iterrows():
+            n = self.root
+            while n.feature_name:
+                split_val = row[n.feature_name]
+                for child in n.child:
+                    if child.split_value == split_val:
+                        n = child
+                        break
+            print(str(index) + n.leaf_node_value)
+
+df = pd.read_csv("play.csv")
+test = pd.read_csv("play_testing.csv")
 decision_tree = DecisionTree(df)
 decision_tree.create_tree()
+decision_tree.predict(test)
 
 
 

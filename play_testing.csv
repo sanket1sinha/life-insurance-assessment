@@ -1,0 +1,9 @@
+﻿outlook,temp,humidity,windy
+sunny,hot,high,WEAK
+sunny,hot,high,STRONG
+overcast,hot,high,WEAK
+rainy,mild,high,WEAK
+rainy,cool,normal,WEAK
+rainy,cool,normal,STRONG
+overcast,cool,normal,STRONG
+sunny,mild,high,WEAK
