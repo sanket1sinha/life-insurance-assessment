@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+from decision_tree import DecisionTree
 
 class RandomForest:
 
@@ -12,18 +12,17 @@ class RandomForest:
         for i in range(tree_count):
             bag = train_data.sample(frac=bag_proportion, replace=True, random_state=i, axis=0)
             bag = bag.sample(frac=bag_proportion, replace=False, random_state=i, axis=1)
-            print(bag.columns)
-        #     bag = pd.concat([bag, train_result], join='inner', axis=1)
-        #     clf = DecisionTree(bag)
-        #     clf.create_tree()
-        #     insurance_testing = clf.predict(test_data)
-        #     li.append(insurance_testing)
-        #
-        # bag_test_response = pd.DataFrame(li, dtype='int32')
-        # print(bag_test_response)
-        # m = bag_test_response.mode()
-        # test_response = m.iloc[0].values.tolist()
-        # return test_response
+            bag = pd.concat([bag, train_result], join='inner', axis=1)
+            clf = DecisionTree(bag)
+            clf.create_tree()
+            insurance_testing = clf.predict(test_data)
+            li.append(insurance_testing)
+
+        bag_test_response = pd.DataFrame(li, dtype='int32')
+        print(bag_test_response)
+        m = bag_test_response.mode()
+        test_response = m.iloc[0].values.tolist()
+        return test_response
 
 
 if __name__ == "__main__":
