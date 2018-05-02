@@ -2,10 +2,9 @@ import pandas as pd
 import numpy as np
 import operator
 from tree import Node
-from sklearn.preprocessing import Imputer
 
 
-class DecisionTree:
+class DecisionTree():
 
     def __init__(self, training_df):
 
@@ -19,7 +18,7 @@ class DecisionTree:
         p = len(training_df[self.response_column].unique())
         # print('calc_gini:'+str(p))
 
-        if p > 1 and training_df.shape[0] >= 50 and len(training_df.columns) >= 3:
+        if p > 1 and training_df.shape[0] >= 200 and len(training_df.columns) >= 80:
 
             for x in training_df.columns:
                 if x != self.response_column:

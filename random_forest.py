@@ -1,26 +1,41 @@
 import pandas as pd
 import numpy as np
 from decision_tree import DecisionTree
+from multiprocessing import Process, Manager
 import time
+
+
+
+
 class RandomForest:
 
     @staticmethod
-    def sampling(train_data, train_result, test_data):
-        tree_count = 100
-        bag_proportion = .90
-        li = []
-        for i in range(tree_count):
-            bag = train_data.sample(frac=.60, replace=True, random_state=i, axis=0)
-            bag = bag.sample(frac=.20, replace=False, random_state=i, axis=1)
-            bag = pd.concat([bag, train_result], join='inner', axis=1)
-            clf = DecisionTree(bag)
-            clf.create_tree()
-            insurance_testing = clf.predict(test_data)
-            li.append(insurance_testing)
-            print('Tree No:'+str(i))
+    def worker(i, train_data, train_result, test_data, x):
+        bag = train_data.sample(frac=.75, replace=False, random_state=int(time.time()), axis=0)
+        bag = bag.sample(frac=.75, replace=False, random_state=int(time.time()), axis=1)
+        bag = pd.concat([bag, train_result], join='inner', axis=1)
+        clf = DecisionTree(bag)
+        clf.create_tree()
+        insurance_testing = clf.predict(test_data)
+        x[i] = insurance_testing
 
-        bag_test_response = pd.DataFrame(li, dtype='int32')
-        print(bag_test_response)
+
+    @staticmethod
+    def sampling(train_data, train_result, test_data):
+        tree_count = 50
+        jobs = []
+        count = 0
+        manager = Manager()
+        x = manager.dict()
+        for i in range(tree_count):
+            p = Process(target=RandomForest.worker, args=(i, train_data, train_result, test_data, x))
+            jobs.append(p)
+            p.start()
+        for j in jobs:
+            j.join()
+            count += 1
+            print('Tree No:' + str(count))
+        bag_test_response = pd.DataFrame(x.values(), dtype='int32')
         m = bag_test_response.mode()
         test_response = m.iloc[0].values.tolist()
         return test_response
