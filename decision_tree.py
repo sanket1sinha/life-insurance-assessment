@@ -18,7 +18,7 @@ class DecisionTree():
         p = len(training_df[self.response_column].unique())
         # print('calc_gini:'+str(p))
 
-        if p > 1 and training_df.shape[0] >= 200 and len(training_df.columns) >= 80:
+        if p > 1 and training_df.shape[0] >= 145 and len(training_df.columns) >= 112:
 
             for x in training_df.columns:
                 if x != self.response_column:
@@ -158,11 +158,11 @@ if __name__ == "__main__":
     numerical_col = insurance_features.select_dtypes(include=[np.number]).columns.tolist()
 
     for i in numerical_col:
-        if i != 'Response':
+        if i != insurance_training_result.name:
+
             insurance_features[i] = pd.cut(insurance_features[i], 2)
             a = pd.Categorical(insurance_features[i])
             insurance_features[i] = a.codes
-
 
 
     insurance_training_features_cleaned = insurance_features[:20000]

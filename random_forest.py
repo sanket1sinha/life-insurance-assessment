@@ -12,7 +12,7 @@ class RandomForest:
     @staticmethod
     def worker(i, train_data, train_result, test_data, x):
         bag = train_data.sample(frac=.75, replace=False, random_state=int(time.time()), axis=0)
-        bag = bag.sample(frac=.75, replace=False, random_state=int(time.time()), axis=1)
+        bag = bag.sample(frac=.90, replace=False, random_state=int(time.time()), axis=1)
         bag = pd.concat([bag, train_result], join='inner', axis=1)
         clf = DecisionTree(bag)
         clf.create_tree()
@@ -96,10 +96,12 @@ if __name__ == "__main__":
     numerical_col = insurance_features.select_dtypes(include=[np.number]).columns.tolist()
 
     for i in numerical_col:
-        if i != insurance_training_result.name :
+        if i != insurance_training_result.name:
+
             insurance_features[i] = pd.cut(insurance_features[i], 2)
             a = pd.Categorical(insurance_features[i])
             insurance_features[i] = a.codes
+
 
     insurance_training_features_cleaned = insurance_features[:20000]
     insurance_testing_features_cleaned = insurance_features[20000:]
