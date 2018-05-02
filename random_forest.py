@@ -7,16 +7,17 @@ class RandomForest:
     @staticmethod
     def sampling(train_data, train_result, test_data):
         tree_count = 50
-        bag_proportion = .9
+        bag_proportion = .95
         li = []
         for i in range(tree_count):
             bag = train_data.sample(frac=bag_proportion, replace=True, random_state=i, axis=0)
-            bag = bag.sample(frac=bag_proportion, replace=False, random_state=i, axis=1)
+            # bag = bag.sample(frac=bag_proportion, replace=False, random_state=i, axis=1)
             bag = pd.concat([bag, train_result], join='inner', axis=1)
             clf = DecisionTree(bag)
             clf.create_tree()
             insurance_testing = clf.predict(test_data)
             li.append(insurance_testing)
+            print('Tree No:'+str(i))
 
         bag_test_response = pd.DataFrame(li, dtype='int32')
         print(bag_test_response)
@@ -81,7 +82,7 @@ if __name__ == "__main__":
 
     for i in numerical_col:
         if i != insurance_training_result.name :
-            insurance_features[i] = pd.cut(insurance_features[i], 10)
+            insurance_features[i] = pd.cut(insurance_features[i], 2)
             a = pd.Categorical(insurance_features[i])
             insurance_features[i] = a.codes
 
