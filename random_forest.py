@@ -1,17 +1,17 @@
 import pandas as pd
 import numpy as np
 from decision_tree import DecisionTree
-
+import time
 class RandomForest:
 
     @staticmethod
     def sampling(train_data, train_result, test_data):
-        tree_count = 50
-        bag_proportion = .95
+        tree_count = 100
+        bag_proportion = .90
         li = []
         for i in range(tree_count):
-            bag = train_data.sample(frac=bag_proportion, replace=True, random_state=i, axis=0)
-            # bag = bag.sample(frac=bag_proportion, replace=False, random_state=i, axis=1)
+            bag = train_data.sample(frac=.60, replace=True, random_state=, axis=0)
+            bag = bag.sample(frac=.20, replace=False, random_state=time.time(), axis=1)
             bag = pd.concat([bag, train_result], join='inner', axis=1)
             clf = DecisionTree(bag)
             clf.create_tree()

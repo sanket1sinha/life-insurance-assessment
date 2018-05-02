@@ -19,7 +19,7 @@ class DecisionTree:
         p = len(training_df[self.response_column].unique())
         # print('calc_gini:'+str(p))
 
-        if p > 1 and training_df.shape[0] >= 125:
+        if p > 1 and training_df.shape[0] >= 50 and len(training_df.columns) >= 3:
 
             for x in training_df.columns:
                 if x != self.response_column:
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     insurance_features = insurance_features.drop('Id',1)
 
 
-    numerical_col=insurance_features.select_dtypes(include=[np.number]).columns.tolist()
+    numerical_col = insurance_features.select_dtypes(include=[np.number]).columns.tolist()
 
     for i in numerical_col:
         if i != 'Response':
