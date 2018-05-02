@@ -10,8 +10,8 @@ class RandomForest:
         bag_proportion = .90
         li = []
         for i in range(tree_count):
-            bag = train_data.sample(frac=.60, replace=True, random_state=, axis=0)
-            bag = bag.sample(frac=.20, replace=False, random_state=time.time(), axis=1)
+            bag = train_data.sample(frac=.60, replace=True, random_state=i, axis=0)
+            bag = bag.sample(frac=.20, replace=False, random_state=i, axis=1)
             bag = pd.concat([bag, train_result], join='inner', axis=1)
             clf = DecisionTree(bag)
             clf.create_tree()
