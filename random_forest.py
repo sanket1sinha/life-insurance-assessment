@@ -20,7 +20,7 @@ class RandomForest:
             else:
                 a = a.append(train_result[train_result == z].sample(n=2000, random_state=int(time.time()), replace=True, axis=0))
         # bag = train_data.sample(frac=.75, replace=False, random_state=int(time.time()), axis=0)
-        bag1 = train_data.join(a, how='inner')
+        bag1 = train_data   .join(a, how='inner')
         clf = DecisionTree(bag1)
         clf.create_tree()
         insurance_testing = clf.predict(test_data)
