@@ -11,10 +11,17 @@ class RandomForest:
 
     @staticmethod
     def worker(i, train_data, train_result, test_data, x):
-        bag = train_data.sample(frac=.75, replace=False, random_state=int(time.time()), axis=0)
-        bag = bag.sample(frac=.90, replace=False, random_state=int(time.time()), axis=1)
-        bag = pd.concat([bag, train_result], join='inner', axis=1)
-        clf = DecisionTree(bag)
+        # bag = train_data.sample(frac=.95, replace=False, random_state=int(time.time()), axis=1)
+
+        a = pd.Series([], name='Response', dtype='int32')
+        for z in train_result.unique():
+            if train_result[train_result == z].count() >= 2000:
+                a = a.append(train_result[train_result == z].sample(n=2000, random_state=int(time.time()), replace=False, axis=0))
+            else:
+                a = a.append(train_result[train_result == z].sample(n=2000, random_state=int(time.time()), replace=True, axis=0))
+        # bag = train_data.sample(frac=.75, replace=False, random_state=int(time.time()), axis=0)
+        bag1 = train_data.join(a, how='inner')
+        clf = DecisionTree(bag1)
         clf.create_tree()
         insurance_testing = clf.predict(test_data)
         x[i] = insurance_testing
@@ -42,7 +49,7 @@ class RandomForest:
 
 
 if __name__ == "__main__":
-
+    t1=int(time.time())
     print('Reading and CLeaning Data')
 
     insurance_training = pd.read_csv("training.csv")
@@ -52,6 +59,7 @@ if __name__ == "__main__":
 
     # Combine training and testing for cleaning data
     insurance_features = pd.concat([insurance_training_features, insurance_testing_features])
+    insurance_features = insurance_features.drop('Id', 1)
 
     insurance_features_text_cols = insurance_features.select_dtypes(include=['object'])
 
@@ -82,26 +90,19 @@ if __name__ == "__main__":
                            "Medical_History_37", \
                            "Medical_History_38", "Medical_History_39", "Medical_History_40", "Medical_History_41"]
 
-    for i in CATEGORICAL_COLUMNS:
-        insurance_features[i] = insurance_features[i].fillna(insurance_features[i].mode()[0])
+    for i in insurance_features.columns:
+        if i in CATEGORICAL_COLUMNS:
+            insurance_features[i] = insurance_features[i].fillna(insurance_features[i].mode()[0])
+        else:
+            insurance_features[i] = insurance_features[i].fillna(insurance_features[i].mean())
 
-    cols = insurance_features.columns.tolist()
-    remaining_cols = [item for item in cols if item not in CATEGORICAL_COLUMNS]
+    NUMERICAL_COLUMNS = insurance_features.select_dtypes(include=[np.number]).columns.tolist()
 
-    # Using imputer as a preprocessing class to replace null values with mean
-    insurance_features[remaining_cols] = insurance_features[remaining_cols].fillna(
-        insurance_features[remaining_cols].mean())
-    insurance_features = insurance_features.drop('Id', 1)
-
-    numerical_col = insurance_features.select_dtypes(include=[np.number]).columns.tolist()
-
-    for i in numerical_col:
+    for i in NUMERICAL_COLUMNS:
         if i != insurance_training_result.name:
-
             insurance_features[i] = pd.cut(insurance_features[i], 2)
             a = pd.Categorical(insurance_features[i])
             insurance_features[i] = a.codes
-
 
     insurance_training_features_cleaned = insurance_features[:20000]
     insurance_testing_features_cleaned = insurance_features[20000:]
@@ -113,11 +114,7 @@ if __name__ == "__main__":
                                                columns=[insurance_training_result.name], dtype='int32')
     insurance_testing_result_df.index.name = 'Id'
     insurance_testing_result_df.to_csv('Response.csv')
-    #
-    # train_data = pd.read_csv("training.csv")
-    # test_data = pd.read_csv("testing.csv")
-    # train_data = train_data.fillna(train_data.mean())
-    # test_data = test_data.fillna(test_data.mean())
-    # cols = test_data.columns.tolist()
+    t2=int(time.time())
+    print(t2-t1)
 
 
