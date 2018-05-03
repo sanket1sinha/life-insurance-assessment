@@ -1,22 +1,32 @@
-import pandas as pd
 import numpy as np
 import operator
-from tree import Node
 
 
-class DecisionTree():
+class DecisionTree:
+    """
+    Decision Tree Classifier which uses criterion=gini, max_depth=None and min_samples_split=2
+    """
 
-    def __init__(self, training_df):
+    def __init__(self, id, training_df, min_samples_split=2, max_depth=None):
 
+        self.id = id
         self.training_df = training_df
         self.response_column = self.training_df.columns[-1]
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
 
     def calc_gini_index(self, training_df, no_of_sample, gini_index_label):
-
+        """
+        Calculates gini index and returns the best split node
+        :param training_df: Values on which the computation will take place
+        :param no_of_sample: Sample size of the data
+        :param gini_index_label: computed value for labels using gini index
+        :return: a tuple of values which contains either feature name  or the target value
+        """
         gini_dic = {}
-        p = len(training_df[self.response_column].unique())
 
-        if p > 1 and training_df.shape[0] >= 142 and (self.training_df.shape[1] - training_df.shape[1]) <= 14:
+        if len(training_df[self.response_column].unique()) > 1 and training_df.shape[0] >= 142 and \
+                (self.max_depth is None or (self.training_df.shape[1] - training_df.shape[1]) <= self.max_depth):
 
             for x in training_df.columns:
                 if x != self.response_column:
@@ -34,15 +44,25 @@ class DecisionTree():
         return 'target', training_df[self.response_column].mode()[0]
 
     def partition(self, training_data, split_node, node):
+        """
+        Computes the partition column using the gini index
+        :param training_data: Values on which the computation will take place
+        :param split_node: column name on which the split will take place
+        :param node: Node object used to construct the tree
+        :return:
+        """
 
-        # splits = list(map(lambda x: (x, training_df[training_df.values == x].drop(split_node, 1)), unique_column_values))
         for col_value in training_data[split_node].unique():
+
             df = training_data[training_data[split_node] == col_value]
             df = df.drop(split_node, 1)
             no_of_sample = df.shape[0]
+
+            # Compute gini index for labels
             gini_index_label = 1 - np.power(
                 df[self.response_column].value_counts() /
                 no_of_sample, 2).sum()
+
             method, content = self.calc_gini_index(df, no_of_sample, gini_index_label)
 
             if method == 'feature_name':
@@ -54,109 +74,76 @@ class DecisionTree():
                 child = Node(split_value=col_value, leaf_node_value=content)
                 node.add_child(child)
 
-    def create_tree(self):
-        print('Creating Tree....')
+    def fit(self):
+        """
+        Creates Decision tree using gini index and recursively partition the data and saves the
+        reference to root node
+        :return:
+        """
+        print('Creating Tree {}....'.format(self.id))
+
         no_of_sample = self.training_df.shape[0]
+
         gini_index_label = 1 - np.power(
             self.training_df[self.response_column].value_counts() /
             no_of_sample, 2).sum()
+
         method, content = self.calc_gini_index(self.training_df, no_of_sample, gini_index_label)
+
         self.root = Node(content)
         self.partition(self.training_df, content, self.root)
 
-
     def predict(self, testing_df):
-        print('Predicting Values...')
+        """
+        Used to traverse the Decision tree using the testing data
+        :param testing_df: Uses this data to predict the response
+        :return: response of the predicted values are returned
+        """
+        print('Predicting Values {}....'.format(self.id))
 
-        counter = 0
         testing_result_list = []
 
         for index, row in testing_df.iterrows():
+
             n = self.root
-            random = False
+            r = False
+
             while n.feature_name:
+
                 split_val = row[n.feature_name]
+
                 for child in n.child:
                     if child.split_value == split_val:
                         n = child
                         break
+
                 if n != child:
-                    random = True
+                    r = True
                     break
-            if random:
-                testing_result_list.append(self.training_df[self.response_column].mode()[0])
-                counter+=1
+
+            if r:
+                testing_result_list.append(self.training_df[self.response_column].mode().iloc[-1])
             else:
                 testing_result_list.append(n.leaf_node_value)
-        print(counter)
+
         return testing_result_list
 
-if __name__ == "__main__":
 
-    print('Reading and CLeaning Data')
+class Node:
+    """
+    Used to create a node of a multi-way tree
+    """
 
-    insurance_training = pd.read_csv("training.csv")
-    insurance_training_features = insurance_training.iloc[:, :-1]
-    insurance_training_result = insurance_training['Response']
-    insurance_testing_features = pd.read_csv("testing.csv")
+    def __init__(self, feature_name=None, split_value=None, leaf_node_value=None):
+        self.feature_name = feature_name
+        self.split_value = split_value
+        self.child = []
+        self.leaf_node_value = leaf_node_value
 
-    # Combine training and testing for cleaning data
-    insurance_features = pd.concat([insurance_training_features, insurance_testing_features])
-    insurance_features = insurance_features.drop('Id', 1)
-
-    insurance_features_text_cols = insurance_features.select_dtypes(include=['object'])
-
-    for col in insurance_features_text_cols:
-        categorical_col = pd.Categorical(insurance_features[col])
-        insurance_features[col] = categorical_col.codes
-
-    CATEGORICAL_COLUMNS = ["Product_Info_1", "Product_Info_2", "Product_Info_3", "Product_Info_5", "Product_Info_6", \
-                           "Product_Info_7", "Employment_Info_2", "Employment_Info_3", "Employment_Info_5",
-                           "InsuredInfo_1", \
-                           "InsuredInfo_2", "InsuredInfo_3", "InsuredInfo_4", "InsuredInfo_5", "InsuredInfo_6",
-                           "InsuredInfo_7", \
-                           "Insurance_History_1", "Insurance_History_2", "Insurance_History_3", "Insurance_History_4",
-                           "Insurance_History_7", \
-                           "Insurance_History_8", "Insurance_History_9", "Family_Hist_1", "Medical_History_2",
-                           "Medical_History_3", \
-                           "Medical_History_4", "Medical_History_5", "Medical_History_6", "Medical_History_7",
-                           "Medical_History_8", \
-                           "Medical_History_9", "Medical_History_11", "Medical_History_12", "Medical_History_13",
-                           "Medical_History_14", \
-                           "Medical_History_16", "Medical_History_17", "Medical_History_18", "Medical_History_19",
-                           "Medical_History_20", \
-                           "Medical_History_21", "Medical_History_22", "Medical_History_23", "Medical_History_25",
-                           "Medical_History_26", \
-                           "Medical_History_27", "Medical_History_28", "Medical_History_29", "Medical_History_30",
-                           "Medical_History_31", \
-                           "Medical_History_33", "Medical_History_34", "Medical_History_35", "Medical_History_36",
-                           "Medical_History_37", \
-                           "Medical_History_38", "Medical_History_39", "Medical_History_40", "Medical_History_41"]
-
-    for i in insurance_features.columns:
-        if i in CATEGORICAL_COLUMNS:
-            insurance_features[i] = insurance_features[i].fillna(insurance_features[i].mode()[0])
-        else:
-            insurance_features[i] = insurance_features[i].fillna(insurance_features[i].mean())
-
-    NUMERICAL_COLUMNS = insurance_features.select_dtypes(include=[np.number]).columns.tolist()
-
-    for i in NUMERICAL_COLUMNS:
-        if i != insurance_training_result.name:
-            insurance_features[i] = pd.cut(insurance_features[i], 2)
-            a = pd.Categorical(insurance_features[i])
-            insurance_features[i] = a.codes
-
-    insurance_training_features_cleaned = insurance_features[:20000]
-    insurance_testing_features_cleaned = insurance_features[20000:]
-    insurance_training_features_cleaned = pd.concat([insurance_training_features_cleaned, insurance_training_result],
-                                                    axis=1)
-
-    decision_tree = DecisionTree(insurance_training_features_cleaned)
-    decision_tree.create_tree()
-    insurance_testing_result = decision_tree.predict(insurance_testing_features_cleaned)
-    insurance_testing_result_df = pd.DataFrame(insurance_testing_result, index=list(range(20000, 30000)),
-                                               columns=[insurance_training_result.name])
-    insurance_testing_result_df.index.name = 'Id'
-    insurance_testing_result_df.to_csv('Response.csv')
-
+    def add_child(self, node):
+        """
+        Adds child to parent node
+        :param node: add it as a child to the Node object
+        :return:
+        """
+        self.child.append(node)
