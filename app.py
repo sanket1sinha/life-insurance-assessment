@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from random_forest import RandomForest
-import time
 
 CATEGORICAL_COLUMNS = ['Product_Info_1', 'Product_Info_2', 'Product_Info_3', 'Product_Info_5', 'Product_Info_6',
                        'Product_Info_7', 'Employment_Info_2', 'Employment_Info_3', 'Employment_Info_5', 'InsuredInfo_1',
@@ -20,8 +19,6 @@ CATEGORICAL_COLUMNS = ['Product_Info_1', 'Product_Info_2', 'Product_Info_3', 'Pr
                        'Medical_History_41']
 
 if __name__ == "__main__":
-
-    t1 = int(time.time())
 
     print('Reading and Cleaning Data......')
 
@@ -65,7 +62,7 @@ if __name__ == "__main__":
 
     # Creating Random Forest Classifier and passing the required parameters
     random_forest_clf = RandomForest(insurance_training_features_cleaned, insurance_training_result,
-                                     tree_count=25, min_samples_split=142, max_depth=14)
+                                     tree_count=50, min_samples_split=142, max_depth=14)
 
     random_forest_clf.fit()
 
@@ -81,5 +78,3 @@ if __name__ == "__main__":
     insurance_testing_result_df.to_csv('Response.csv')
 
     print('Your file `Response.csv` is ready')
-    t2 = int(time.time())
-    print(t2 - t1)

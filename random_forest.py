@@ -9,7 +9,7 @@ class RandomForest:
     Creates multiple decision trees using bootstrap sampling and predicts output using bagging mechanism
     """
 
-    def __init__(self, training_df, training_result, tree_count=1, min_samples_split=2, max_depth=None):
+    def __init__(self, training_df, training_result, tree_count=10, min_samples_split=2, max_depth=None):
 
         self.training_df = training_df
         self.training_result = training_result
@@ -40,7 +40,7 @@ class RandomForest:
                     n=1900, random_state=int(time.time()), replace=False, axis=0))
             else:
                 balanced_classes = balanced_classes.append(self.training_result[self.training_result == col_val].sample(
-                    n=1100, random_state=int(time.time()), replace=True, axis=0))
+                    n=1200, random_state=int(time.time()), replace=True, axis=0))
 
         bag = bag_col_sample.join(balanced_classes, how='inner')
 
@@ -67,7 +67,7 @@ class RandomForest:
         count = 0
 
         for i in range(self.tree_count):
-            p = Process(target=self.fit_trees, args=(i,))
+            p = Process(target=self.fit_trees, args=(i + 1,))
             jobs.append(p)
             p.start()
 
@@ -87,7 +87,7 @@ class RandomForest:
         jobs = []
         count = 0
         for i in range(self.tree_count):
-            p = Process(target=self.predict_trees, args=(i, testing_data))
+            p = Process(target=self.predict_trees, args=(i + 1, testing_data))
             jobs.append(p)
             p.start()
 

@@ -25,8 +25,8 @@ class DecisionTree:
         """
         gini_dic = {}
 
-        if len(training_df[self.response_column].unique()) > 1 and training_df.shape[0] >= 142 and \
-                (self.max_depth is None or (self.training_df.shape[1] - training_df.shape[1]) <= self.max_depth):
+        if len(training_df[self.response_column].unique()) > 1 and training_df.shape[0] >= self.min_samples_split and (
+                self.max_depth is None or (self.training_df.shape[1] - training_df.shape[1]) <= self.max_depth):
 
             for x in training_df.columns:
                 if x != self.response_column:
